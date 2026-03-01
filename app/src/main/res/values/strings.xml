@@ -1,0 +1,58 @@
+<resources>
+    <string name="app_name">Document Scanner</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Document Scanner</string>
+    <string name="home_subtitle">Scan and manage your documents</string>
+    <string name="btn_scan">Scan</string>
+    <string name="btn_scans">Scans</string>
+
+    <!-- Scanner Screen -->
+    <string name="scan_title">Scan Document</string>
+    <string name="scan_subtitle">Tap the button to start the scanner</string>
+
+    <!-- Result Screen -->
+    <string name="result_title">Preview</string>
+    <string name="result_document_captured">Document captured in high resolution</string>
+    <string name="result_document_name_label">Document Name</string>
+    <string name="result_document_name_hint">Enter a name for this scan</string>
+    <string name="btn_save_pdf">Save PDF</string>
+    <string name="btn_save_jpeg">Save Image</string>
+    <string name="btn_share">Share</string>
+    <string name="btn_new_scan">New Scan</string>
+
+    <!-- Scans Screen -->
+    <string name="scans_title">My Scans</string>
+    <string name="scans_empty">No scans yet. Tap \"Scan\" to get started!</string>
+    <string name="scans_delete_title">Delete Scan</string>
+    <string name="scans_delete_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="scans_rename_title">Rename Scan</string>
+    <string name="scans_rename_hint">Enter new name</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_rename">Rename</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_confirm">Confirm</string>
+    <string name="btn_open">Open</string>
+
+    <!-- Messages -->
+    <string name="msg_scan_cancelled">Scan cancelled</string>
+    <string name="msg_error">An error occurred</string>
+    <string name="msg_save_success">File saved successfully</string>
+    <string name="msg_delete_success">Scan deleted successfully</string>
+    <string name="msg_rename_success">Scan renamed successfully</string>
+    <string name="msg_save_error">Error saving file: %1$s</string>
+    <string name="msg_delete_error">Error deleting scan</string>
+    <string name="msg_rename_error">Error renaming scan</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Camera Permission Required</string>
+    <string name="permission_camera_message">This app needs camera access to scan documents.</string>
+    <string name="permission_storage_title">Storage Permission Required</string>
+    <string name="permission_storage_message">This app needs storage access to save and manage your scans.</string>
+    <string name="permission_grant">Grant Permission</string>
+    <string name="permission_denied">Permission denied. Please enable it in Settings.</string>
+
+    <!-- Share Dialog -->
+    <string name="share_choose_format_title">Share as…</string>
+    <string name="share_choose_format_message">Choose the format to share:</string>
+</resources>

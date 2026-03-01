@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Expose getExternalFilesDir(DIRECTORY_DOCUMENTS) -> used by FileManager -->
+    <external-files-path name="documents" path="Documents" />
+    <external-files-path name="pictures" path="Pictures" />
+    <!-- Cache directory for temporary share files -->
+    <cache-path name="share_cache" path="share_temp/" />
+</paths>
+
