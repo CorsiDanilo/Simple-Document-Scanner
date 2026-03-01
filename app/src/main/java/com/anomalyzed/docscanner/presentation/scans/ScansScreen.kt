@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -61,6 +65,11 @@ import com.anomalyzed.docscanner.domain.model.ScannedDocument
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +82,11 @@ fun ScansScreen(
     var documentToDelete by remember { mutableStateOf<ScannedDocument?>(null) }
     var documentToRename by remember { mutableStateOf<ScannedDocument?>(null) }
     var renameText by remember { mutableStateOf("") }
+    
+    // Multi-selection state
+    var selectedDocuments by remember { mutableStateOf(setOf<String>()) }
+    var showDeleteSelectedConfirm by remember { mutableStateOf(false) }
+    val isSelectionMode = selectedDocuments.isNotEmpty()
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let { message ->
@@ -104,6 +118,37 @@ fun ScansScreen(
             },
             dismissButton = {
                 TextButton(onClick = { documentToDelete = null }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    // Delete selected confirmation dialog
+    if (showDeleteSelectedConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteSelectedConfirm = false },
+            title = { Text(stringResource(R.string.scans_delete_selected_title)) },
+            text = {
+                Text(stringResource(R.string.scans_delete_selected_message, selectedDocuments.size))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val docsToDelete = uiState.documents.filter { it.id in selectedDocuments }
+                        docsToDelete.forEach { viewModel.deleteDocument(it) }
+                        selectedDocuments = emptySet()
+                        showDeleteSelectedConfirm = false
+                    }
+                ) {
+                    Text(
+                        stringResource(R.string.btn_delete),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteSelectedConfirm = false }) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
@@ -151,14 +196,61 @@ fun ScansScreen(
 
     Scaffold(
         topBar = {
-            LargeTopAppBar(
-                title = { Text(stringResource(R.string.scans_title), fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            if (isSelectionMode) {
+                CenterAlignedTopAppBar(
+                    title = { Text("${selectedDocuments.size} selezionati") },
+                    navigationIcon = {
+                        IconButton(onClick = { selectedDocuments = emptySet() }) {
+                            Icon(Icons.Default.Close, contentDescription = "Cancel Selection")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            val docsToShare = uiState.documents.filter { it.id in selectedDocuments }
+                            if (docsToShare.size == 1) {
+                                val doc = docsToShare.first()
+                                val uri = doc.pdfUri ?: doc.imageUri
+                                val mimeType = if (doc.format == DocumentFormat.PDF) "application/pdf" else "image/jpeg"
+                                uri?.let {
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = mimeType
+                                        putExtra(Intent.EXTRA_STREAM, it)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, null))
+                                }
+                            } else if (docsToShare.size > 1) {
+                                val uris = ArrayList(docsToShare.mapNotNull { it.pdfUri ?: it.imageUri })
+                                if (uris.isNotEmpty()) {
+                                    val shareIntent = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                                        type = "*/*" // Mix of PDF and Images possible
+                                        putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, null))
+                                }
+                            }
+                            selectedDocuments = emptySet()
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share Selected")
+                        }
+                        IconButton(onClick = {
+                            showDeleteSelectedConfirm = true
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete Selected", tint = MaterialTheme.colorScheme.error)
+                        }
                     }
-                }
-            )
+                )
+            } else {
+                LargeTopAppBar(
+                    title = { Text(stringResource(R.string.scans_title), fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                )
+            }
         }
     ) { padding ->
         Box(
@@ -205,35 +297,50 @@ fun ScansScreen(
                         items(uiState.documents) { document ->
                             ScanItem(
                                 document = document,
+                                isSelected = document.id in selectedDocuments,
                                 onClick = {
-                                    // Open the document for viewing
-                                    val uri = document.pdfUri ?: document.imageUri
-                                    val mimeType = when (document.format) {
-                                        DocumentFormat.PDF -> "application/pdf"
-                                        DocumentFormat.JPEG -> "image/jpeg"
-                                        DocumentFormat.PNG -> "image/png"
-                                    }
-                                    uri?.let {
-                                        try {
-                                            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
-                                                setDataAndType(it, mimeType)
-                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                            }
-                                            context.startActivity(viewIntent)
-                                        } catch (e: ActivityNotFoundException) {
-                                            Toast.makeText(
-                                                context,
-                                                "No app found to open this file",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                    if (isSelectionMode) {
+                                        selectedDocuments = if (document.id in selectedDocuments) {
+                                            selectedDocuments - document.id
+                                        } else {
+                                            selectedDocuments + document.id
                                         }
+                                    } else {
+                                        // Open the document for viewing
+                                        val uri = document.pdfUri ?: document.imageUri
+                                        val mimeType = when (document.format) {
+                                            DocumentFormat.PDF -> "application/pdf"
+                                            DocumentFormat.JPEG -> "image/jpeg"
+                                            DocumentFormat.PNG -> "image/png"
+                                        }
+                                        uri?.let {
+                                            try {
+                                                val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                                                    setDataAndType(it, mimeType)
+                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                }
+                                                context.startActivity(viewIntent)
+                                            } catch (e: ActivityNotFoundException) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "No app found to open this file",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                },
+                                onLongClick = {
+                                    if (!isSelectionMode) {
+                                        selectedDocuments = setOf(document.id)
                                     }
                                 },
                                 onDelete = { documentToDelete = document },
                                 onRename = {
                                     renameText = document.title
                                     documentToRename = document
-                                }
+                                },
+                                isSelectionMode = isSelectionMode
                             )
                         }
                     }
@@ -243,12 +350,16 @@ fun ScansScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun ScanItem(
     document: ScannedDocument,
+    isSelected: Boolean,
     onClick: () -> Unit,
+    onLongClick: () -> Unit,
     onDelete: () -> Unit,
-    onRename: () -> Unit
+    onRename: () -> Unit,
+    isSelectionMode: Boolean = false
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
     val formattedDate = remember(document.timestamp) {
@@ -258,10 +369,13 @@ private fun ScanItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
         )
     ) {
         ListItem(
@@ -282,37 +396,56 @@ private fun ScanItem(
                 )
             },
             leadingContent = {
-                Icon(
-                    imageVector = when (document.format) {
-                        DocumentFormat.PDF -> Icons.Default.PictureAsPdf
-                        else -> Icons.Default.Image
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = when (document.format) {
-                        DocumentFormat.PDF -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.primary
-                    }
-                )
-            },
-            trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onRename) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = stringResource(R.string.btn_rename),
-                            tint = MaterialTheme.colorScheme.primary
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (document.imageUri != null) {
+                        AsyncImage(
+                            model = document.imageUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
-                    }
-                    IconButton(onClick = onDelete) {
+                    } else {
                         Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.btn_delete),
-                            tint = MaterialTheme.colorScheme.error
+                            imageVector = when (document.format) {
+                                DocumentFormat.PDF -> Icons.Default.PictureAsPdf
+                                else -> Icons.Default.Image
+                            },
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = when (document.format) {
+                                DocumentFormat.PDF -> MaterialTheme.colorScheme.error
+                                else -> MaterialTheme.colorScheme.primary
+                            }
                         )
                     }
                 }
             },
+            trailingContent = if (!isSelectionMode) {
+                {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onRename) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.btn_rename),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.btn_delete),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            } else null,
             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
     }

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.graphicsLayer
+import coil.compose.AsyncImage
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Image
@@ -33,6 +42,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,7 +74,7 @@ import java.util.Locale
 @Composable
 fun ResultScreen(
     pdfUri: Uri?,
-    imageUri: Uri?,
+    imageUris: List<Uri>,
     onNavigateToScans: () -> Unit,
     onNavigateBack: () -> Unit,
     viewModel: ScannerViewModel = hiltViewModel()
@@ -80,6 +90,35 @@ fun ResultScreen(
     }
     var documentName by remember { mutableStateOf(defaultName) }
     var showShareDialog by remember { mutableStateOf(false) }
+    var showSaveDialog by remember { mutableStateOf(false) }
+    var showDiscardConfirm by remember { mutableStateOf(false) }
+
+    // Discard confirmation dialog
+    if (showDiscardConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDiscardConfirm = false },
+            title = { Text(stringResource(R.string.discard_scan_title)) },
+            text = { Text(stringResource(R.string.discard_scan_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDiscardConfirm = false
+                        onNavigateBack()
+                    }
+                ) {
+                    Text(
+                        stringResource(R.string.btn_discard),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDiscardConfirm = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
 
     /**
      * Copies a content:// URI (e.g. from ML Kit) to our cache dir,
@@ -122,6 +161,10 @@ fun ResultScreen(
         }
     }
 
+    BackHandler(enabled = true) {
+        showDiscardConfirm = true
+    }
+
     LaunchedEffect(uiState) {
         when (uiState) {
             is ScannerUiState.Success -> {
@@ -159,11 +202,13 @@ fun ResultScreen(
                             Text("PDF")
                         }
                     }
-                    if (imageUri != null) {
+                    if (imageUris.isNotEmpty()) {
                         TextButton(
                             onClick = {
                                 showShareDialog = false
-                                shareFile(imageUri, "image/jpeg")
+                                // For now share the first image if multiple, 
+                                // or we could share all as multiple files but keep it simple
+                                shareFile(imageUris.first(), "image/jpeg")
                             }
                         ) {
                             Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -181,41 +226,127 @@ fun ResultScreen(
         )
     }
 
+    // Save format choice dialog
+    if (showSaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showSaveDialog = false },
+            title = { Text(stringResource(R.string.save_choose_format_title)) },
+            text = { Text(stringResource(R.string.save_choose_format_message)) },
+            confirmButton = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (pdfUri != null) {
+                        TextButton(
+                            onClick = {
+                                showSaveDialog = false
+                                val name = documentName.ifBlank { defaultName }
+                                viewModel.saveDocument(pdfUri, name)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(stringResource(R.string.btn_save_pdf))
+                        }
+                    }
+                    if (imageUris.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                showSaveDialog = false
+                                val name = documentName.ifBlank { defaultName }
+                                viewModel.saveImage(imageUris, name)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Image, contentDescription = null)
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(if (imageUris.size > 1) "Save ${imageUris.size} Images" else stringResource(R.string.btn_save_jpeg))
+                        }
+                    }
+                    if (pdfUri != null && imageUris.isNotEmpty()) {
+                        TextButton(
+                            onClick = {
+                                showSaveDialog = false
+                                val name = documentName.ifBlank { defaultName }
+                                viewModel.saveBoth(pdfUri, imageUris, name)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.SaveAlt, contentDescription = null)
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Text(stringResource(R.string.btn_save_both))
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSaveDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.result_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { showDiscardConfirm = true }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background Preview
+            LazyRow(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items(imageUris) { uri ->
+                    AsyncImage(
+                        model = uri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillParentMaxSize()
+                            .padding(32.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .graphicsLayer {
+                                alpha = 0.3f
+                            },
+                        contentScale = ContentScale.Fit
+                    )
+                }
+                if (imageUris.isEmpty()) {
+                    item {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.SaveAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(100.dp),
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            )
+                        }
+                    }
+                }
+            }
 
-            Icon(
-                imageVector = Icons.Default.SaveAlt,
-                contentDescription = null,
-                modifier = Modifier.size(100.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = stringResource(R.string.result_document_captured),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
 
-            Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
 
             // Document name input
             OutlinedTextField(
@@ -243,54 +374,35 @@ fun ResultScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     FilledTonalButton(
-                        onClick = {
-                            pdfUri?.let {
-                                val name = documentName.ifBlank { defaultName }
-                                viewModel.saveDocument(it, name)
-                            }
-                        },
+                        onClick = { showSaveDialog = true },
                         modifier = Modifier.weight(1f),
-                        enabled = pdfUri != null && uiState !is ScannerUiState.Processing
+                        enabled = (pdfUri != null || imageUris.isNotEmpty()) && uiState !is ScannerUiState.Processing
                     ) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                        Icon(Icons.Default.SaveAlt, contentDescription = null)
                         Spacer(modifier = Modifier.size(8.dp))
-                        Text(stringResource(R.string.btn_save_pdf))
+                        Text(stringResource(R.string.btn_save))
                     }
 
                     FilledTonalButton(
                         onClick = {
-                            imageUri?.let {
-                                val name = documentName.ifBlank { defaultName }
-                                viewModel.saveImage(it, name)
+                            if (pdfUri != null && imageUris.isNotEmpty()) {
+                                showShareDialog = true
+                            } else if (pdfUri != null) {
+                                shareFile(pdfUri, "application/pdf")
+                            } else if (imageUris.isNotEmpty()) {
+                                shareFile(imageUris.first(), "image/jpeg")
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = imageUri != null && uiState !is ScannerUiState.Processing
+                        enabled = (pdfUri != null || imageUris.isNotEmpty())
                     ) {
-                        Icon(Icons.Default.Image, contentDescription = null)
+                        Icon(Icons.Default.Share, contentDescription = null)
                         Spacer(modifier = Modifier.size(8.dp))
-                        Text(stringResource(R.string.btn_save_jpeg))
+                        Text(stringResource(R.string.btn_share))
                     }
-                }
-
-                FilledTonalButton(
-                    onClick = {
-                        if (pdfUri != null && imageUri != null) {
-                            showShareDialog = true
-                        } else if (pdfUri != null) {
-                            shareFile(pdfUri, "application/pdf")
-                        } else if (imageUri != null) {
-                            shareFile(imageUri, "image/jpeg")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = (pdfUri != null || imageUri != null)
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null)
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Text(stringResource(R.string.btn_share))
                 }
             }
         }
+    }
     }
 }

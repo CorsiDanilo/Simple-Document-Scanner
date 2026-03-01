@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Document Scanner</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Document Scanner</string>
+    <string name="home_subtitle">Scansiona e gestisci i tuoi documenti</string>
+    <string name="btn_scan">Scansiona</string>
+    <string name="btn_scans">Scansioni</string>
+
+    <!-- Scanner Screen -->
+    <string name="scan_title">Scansiona Documento</string>
+    <string name="scan_subtitle">Tocca il pulsante per avviare lo scanner</string>
+
+    <!-- Result Screen -->
+    <string name="result_title">Anteprima</string>
+    <string name="result_document_captured">Documento acquisito in alta risoluzione</string>
+    <string name="result_document_name_label">Nome Documento</string>
+    <string name="result_document_name_hint">Inserisci un nome per questa scansione</string>
+    <string name="btn_save_pdf">Salva PDF</string>
+    <string name="btn_save_jpeg">Salva Immagine</string>
+    <string name="btn_share">Condividi</string>
+    <string name="btn_new_scan">Nuova Scansione</string>
+    <string name="discard_scan_title">Scartare la scansione?</string>
+    <string name="discard_scan_message">Sei sicuro di voler scartare questa scansione? Le modifiche andranno perse.</string>
+    <string name="btn_discard">Scarta</string>
+
+    <!-- Scans Screen -->
+    <string name="scans_title">Le Mie Scansioni</string>
+    <string name="scans_empty">Ancora nessuna scansione. Tocca \"Scansiona\" per iniziare!</string>
+    <string name="scans_delete_title">Elimina Scansione</string>
+    <string name="scans_delete_message">Sei sicuro di voler eliminare \"%1$s\"?</string>
+    <string name="scans_delete_selected_title">Elimina Scansioni Selezionate</string>
+    <string name="scans_delete_selected_message">Sei sicuro di voler eliminare %1$d scansioni selezionate?</string>
+    <string name="scans_rename_title">Rinomina Scansione</string>
+    <string name="scans_rename_hint">Inserisci il nuovo nome</string>
+    <string name="btn_delete">Elimina</string>
+    <string name="btn_rename">Rinomina</string>
+    <string name="btn_cancel">Annulla</string>
+    <string name="btn_confirm">Conferma</string>
+    <string name="btn_open">Apri</string>
+
+    <!-- Messages -->
+    <string name="msg_scan_cancelled">Scansione annullata</string>
+    <string name="msg_error">Si è verificato un errore</string>
+    <string name="msg_save_success">File salvato con successo</string>
+    <string name="msg_delete_success">Scansione eliminata con successo</string>
+    <string name="msg_rename_success">Scansione rinominata con successo</string>
+    <string name="msg_save_error">Errore durante il salvataggio: %1$s</string>
+    <string name="msg_delete_error">Errore nell\'eliminazione della scansione</string>
+    <string name="msg_rename_error">Errore nella rinomina della scansione</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Permesso Fotocamera Richiesto</string>
+    <string name="permission_camera_message">Questa app necessita dell\'accesso alla fotocamera per scansionare i documenti.</string>
+    <string name="permission_storage_title">Permesso Archiviazione Richiesto</string>
+    <string name="permission_storage_message">Questa app necessita dell\'accesso all\'archiviazione per salvare e gestire le tue scansioni.</string>
+    <string name="permission_grant">Concedi Permesso</string>
+    <string name="permission_denied">Permesso negato. Per favore abilitalo nelle Impostazioni.</string>
+
+    <!-- Share Dialog -->
+    <string name="share_choose_format_title">Condividi come…</string>
+    <string name="share_choose_format_message">Scegli il formato per la condivisione:</string>
+    <string name="btn_save">Salva</string>
+    <string name="btn_save_both">Entrambi (PDF &amp; Immagine)</string>
+
+    <!-- Save Dialog -->
+    <string name="save_choose_format_title">Salva come…</string>
+    <string name="save_choose_format_message">Scegli il formato per il salvataggio:</string>
+</resources>

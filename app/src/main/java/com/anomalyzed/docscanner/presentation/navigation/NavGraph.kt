@@ -14,11 +14,12 @@ import com.anomalyzed.docscanner.presentation.scans.ScansScreen
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Scans : Screen("scans")
-    object Result : Screen("result/{pdfUri}/{imageUri}") {
-        fun createRoute(pdfUri: String, imageUri: String): String {
+    object Result : Screen("result/{pdfUri}/{imageUris}") {
+        fun createRoute(pdfUri: String, imageUris: List<String>): String {
             val encodedPdf = Uri.encode(pdfUri.ifEmpty { "none" })
-            val encodedImage = Uri.encode(imageUri.ifEmpty { "none" })
-            return "result/$encodedPdf/$encodedImage"
+            val joinedImages = if (imageUris.isEmpty()) "none" else imageUris.joinToString(",")
+            val encodedImages = Uri.encode(joinedImages)
+            return "result/$encodedPdf/$encodedImages"
         }
     }
 }
@@ -28,8 +29,8 @@ fun DocScannerNavGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(
-                onScanSuccess = { pdfUri, imageUri ->
-                    navController.navigate(Screen.Result.createRoute(pdfUri, imageUri))
+                onScanSuccess = { pdfUri, imageUris ->
+                    navController.navigate(Screen.Result.createRoute(pdfUri, imageUris))
                 },
                 onNavigateToScans = {
                     navController.navigate(Screen.Scans.route)
@@ -49,17 +50,19 @@ fun DocScannerNavGraph(navController: NavHostController) {
             route = Screen.Result.route,
             arguments = listOf(
                 navArgument("pdfUri") { type = NavType.StringType },
-                navArgument("imageUri") { type = NavType.StringType }
+                navArgument("imageUris") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val pdfUriString = backStackEntry.arguments?.getString("pdfUri")
-            val imageUriString = backStackEntry.arguments?.getString("imageUri")
+            val imageUrisString = backStackEntry.arguments?.getString("imageUris")
             val pdfUri = pdfUriString?.takeIf { it != "none" }?.let { Uri.parse(Uri.decode(it)) }
-            val imageUri = imageUriString?.takeIf { it != "none" }?.let { Uri.parse(Uri.decode(it)) }
+            val imageUris = imageUrisString?.takeIf { it != "none" }?.let { 
+                Uri.decode(it).split(",").map { uri -> Uri.parse(uri) }
+            } ?: emptyList()
 
             ResultScreen(
                 pdfUri = pdfUri,
-                imageUri = imageUri,
+                imageUris = imageUris,
                 onNavigateToScans = {
                     navController.navigate(Screen.Scans.route) {
                         popUpTo(Screen.Home.route) { inclusive = false }

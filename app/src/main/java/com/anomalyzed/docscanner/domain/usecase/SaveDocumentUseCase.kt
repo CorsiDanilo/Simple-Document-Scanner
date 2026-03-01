@@ -19,10 +19,20 @@ class SaveDocumentUseCase @Inject constructor(
         }
     }
 
-    suspend fun saveImage(sourceUri: Uri, title: String? = null): Result<ScannedDocument> = withContext(Dispatchers.IO) {
+    suspend fun saveImages(sourceUris: List<Uri>, title: String? = null): Result<List<ScannedDocument>> = withContext(Dispatchers.IO) {
         try {
-            val document = repository.saveImageToStorage(sourceUri, title)
-            Result.success(document)
+            val documents = repository.saveImagesToStorage(sourceUris, title)
+            Result.success(documents)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun saveBoth(pdfUri: Uri, imageUris: List<Uri>, title: String? = null): Result<List<ScannedDocument>> = withContext(Dispatchers.IO) {
+        try {
+            val pdf = repository.savePdfToStorage(pdfUri, title)
+            val images = repository.saveImagesToStorage(imageUris, title)
+            Result.success(listOf(pdf) + images)
         } catch (e: Exception) {
             Result.failure(e)
         }

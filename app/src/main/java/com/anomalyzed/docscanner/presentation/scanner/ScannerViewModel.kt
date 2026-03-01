@@ -48,14 +48,26 @@ class ScannerViewModel @Inject constructor(
         }
     }
 
-    fun saveImage(imageUri: Uri, title: String? = null) {
+    fun saveImage(imageUris: List<Uri>, title: String? = null) {
         viewModelScope.launch {
             _uiState.value = ScannerUiState.Processing
-            val result = saveDocumentUseCase.saveImage(imageUri, title)
+            val result = saveDocumentUseCase.saveImages(imageUris, title)
             result.onSuccess {
-                _uiState.value = ScannerUiState.Success("Image saved successfully")
+                _uiState.value = ScannerUiState.Success("${imageUris.size} Images saved successfully")
             }.onFailure {
                 _uiState.value = ScannerUiState.Error("Error saving image: ${it.localizedMessage}")
+            }
+        }
+    }
+
+    fun saveBoth(pdfUri: Uri, imageUris: List<Uri>, title: String? = null) {
+        viewModelScope.launch {
+            _uiState.value = ScannerUiState.Processing
+            val result = saveDocumentUseCase.saveBoth(pdfUri, imageUris, title)
+            result.onSuccess {
+                _uiState.value = ScannerUiState.Success("Files saved successfully")
+            }.onFailure {
+                _uiState.value = ScannerUiState.Error("Error saving files: ${it.localizedMessage}")
             }
         }
     }

@@ -28,16 +28,20 @@ class DocumentRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun saveImageToStorage(sourceUri: Uri, title: String?): ScannedDocument = withContext(Dispatchers.IO) {
-        val (file, shareableUri) = fileManager.saveImageFromUri(sourceUri, title)
-        ScannedDocument(
-            id = file.absolutePath,
-            title = file.nameWithoutExtension,
-            imageUri = shareableUri,
-            pdfUri = null,
-            timestamp = System.currentTimeMillis(),
-            format = DocumentFormat.JPEG
-        )
+    override suspend fun saveImagesToStorage(sourceUris: List<Uri>, title: String?): List<ScannedDocument> = withContext(Dispatchers.IO) {
+        sourceUris.mapIndexed { index, uri ->
+            val suffix = if (sourceUris.size > 1) "_${index + 1}" else ""
+            val customTitle = title?.let { "$it$suffix" }
+            val (file, shareableUri) = fileManager.saveImageFromUri(uri, customTitle)
+            ScannedDocument(
+                id = file.absolutePath,
+                title = file.nameWithoutExtension,
+                imageUri = shareableUri,
+                pdfUri = null,
+                timestamp = System.currentTimeMillis(),
+                format = DocumentFormat.JPEG
+            )
+        }
     }
 
     override fun getShareableUri(fileUri: Uri): Uri {

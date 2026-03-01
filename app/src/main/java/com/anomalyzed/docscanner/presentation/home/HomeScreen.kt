@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onScanSuccess: (pdfUri: String, imageUri: String) -> Unit,
+    onScanSuccess: (pdfUri: String, imageUris: List<String>) -> Unit,
     onNavigateToScans: () -> Unit
 ) {
     val context = LocalContext.current
@@ -84,7 +84,7 @@ fun HomeScreen(
     val scannerOptions = remember {
         GmsDocumentScannerOptions.Builder()
             .setGalleryImportAllowed(true)
-            .setPageLimit(1)
+            .setPageLimit(50) // Set a reasonable limit as 0 is not allowed
             .setResultFormats(
                 GmsDocumentScannerOptions.RESULT_FORMAT_JPEG,
                 GmsDocumentScannerOptions.RESULT_FORMAT_PDF
@@ -101,9 +101,9 @@ fun HomeScreen(
         if (result.resultCode == Activity.RESULT_OK) {
             val scanResult = GmsDocumentScanningResult.fromActivityResultIntent(result.data)
             val pdfUri = scanResult?.pdf?.uri?.toString() ?: ""
-            val imageUri = scanResult?.pages?.firstOrNull()?.imageUri?.toString() ?: ""
-            if (pdfUri.isNotEmpty() || imageUri.isNotEmpty()) {
-                onScanSuccess(pdfUri, imageUri)
+            val imageUris = scanResult?.pages?.map { it.imageUri.toString() } ?: emptyList()
+            if (pdfUri.isNotEmpty() || imageUris.isNotEmpty()) {
+                onScanSuccess(pdfUri, imageUris)
             }
         }
     }

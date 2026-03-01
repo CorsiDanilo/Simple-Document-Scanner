@@ -20,12 +20,17 @@
     <string name="btn_save_jpeg">Save Image</string>
     <string name="btn_share">Share</string>
     <string name="btn_new_scan">New Scan</string>
+    <string name="discard_scan_title">Discard Scan?</string>
+    <string name="discard_scan_message">Are you sure you want to discard this scan? Your changes will be lost.</string>
+    <string name="btn_discard">Discard</string>
 
     <!-- Scans Screen -->
     <string name="scans_title">My Scans</string>
     <string name="scans_empty">No scans yet. Tap \"Scan\" to get started!</string>
     <string name="scans_delete_title">Delete Scan</string>
     <string name="scans_delete_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="scans_delete_selected_title">Delete Selected Scans</string>
+    <string name="scans_delete_selected_message">Are you sure you want to delete %1$d selected scans?</string>
     <string name="scans_rename_title">Rename Scan</string>
     <string name="scans_rename_hint">Enter new name</string>
     <string name="btn_delete">Delete</string>
@@ -55,4 +60,10 @@
     <!-- Share Dialog -->
     <string name="share_choose_format_title">Share as…</string>
     <string name="share_choose_format_message">Choose the format to share:</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_save_both">Both (PDF &amp; Image)</string>
+
+    <!-- Save Dialog -->
+    <string name="save_choose_format_title">Save as…</string>
+    <string name="save_choose_format_message">Choose the format to save:</string>
 </resources>

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/app_icon.png" width="160" height="160" alt="Simple Document Scanner Icon">
+</p>
+
 # Simple Document Scanner 📄✨
 
 A high-performance, modern Android application built to simplify document scanning, processing, and sharing. Powered by **Google Play Services ML Kit**, this app provides a seamless professional scanning experience directly on your device.
@@ -81,9 +85,3 @@ graph TD
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-<p align="center">
-  Generated with ❤️ by <strong>Antigravity</strong>
-</p>
