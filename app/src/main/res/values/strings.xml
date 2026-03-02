@@ -13,6 +13,7 @@
 
     <!-- Result Screen -->
     <string name="result_title">Preview</string>
+    <string name="result_loading">Loading preview…</string>
     <string name="result_document_captured">Document captured in high resolution</string>
     <string name="result_document_name_label">Document Name</string>
     <string name="result_document_name_hint">Enter a name for this scan</string>

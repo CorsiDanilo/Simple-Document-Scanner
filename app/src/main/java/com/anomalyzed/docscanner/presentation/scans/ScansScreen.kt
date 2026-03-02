@@ -13,10 +13,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -93,6 +94,9 @@ fun ScansScreen(
     var selectedDocuments by remember { mutableStateOf(setOf<String>()) }
     var showDeleteSelectedConfirm by remember { mutableStateOf(false) }
     val isSelectionMode = selectedDocuments.isNotEmpty()
+
+    val sharedPrefs = context.getSharedPreferences("scanner_prefs", android.content.Context.MODE_PRIVATE)
+    var hasShownHint by remember { mutableStateOf(sharedPrefs.getBoolean("has_shown_hint", false)) }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let { message ->
@@ -300,9 +304,14 @@ fun ScansScreen(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(uiState.documents) { document ->
+                        itemsIndexed(uiState.documents) { index, document ->
                             ScanItem(
                                 document = document,
+                                isFirstItemHint = index == 0 && !hasShownHint,
+                                onHintFinished = {
+                                    hasShownHint = true
+                                    sharedPrefs.edit().putBoolean("has_shown_hint", true).apply()
+                                },
                                 isSelected = document.id in selectedDocuments,
                                 onClick = {
                                     if (isSelectionMode) {
@@ -378,6 +387,8 @@ private fun ScanItem(
     onDelete: () -> Unit,
     onRename: () -> Unit,
     onShare: () -> Unit,
+    isFirstItemHint: Boolean = false,
+    onHintFinished: () -> Unit = {},
     isSelectionMode: Boolean = false
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
@@ -397,13 +408,39 @@ private fun ScanItem(
         }
     )
 
+    var hintOffset by remember { mutableStateOf(0f) }
+    val animatedHintOffset by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = hintOffset,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 300),
+        label = "hint_offset_animation"
+    )
+
+    LaunchedEffect(isFirstItemHint) {
+        if (isFirstItemHint) {
+            kotlinx.coroutines.delay(800)
+            hintOffset = 180f // show left hint (blue side)
+            kotlinx.coroutines.delay(450)
+            hintOffset = -180f // show right hint (red side)
+            kotlinx.coroutines.delay(450)
+            hintOffset = 0f // return to center
+            kotlinx.coroutines.delay(400)
+            onHintFinished()
+        }
+    }
+
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = !isSelectionMode,
         enableDismissFromEndToStart = !isSelectionMode,
         backgroundContent = {
+            val effectiveTarget = when {
+                hintOffset > 0f -> SwipeToDismissBoxValue.StartToEnd
+                hintOffset < 0f -> SwipeToDismissBoxValue.EndToStart
+                else -> dismissState.targetValue
+            }
+
             val color by animateColorAsState(
-                targetValue = when (dismissState.targetValue) {
+                targetValue = when (effectiveTarget) {
                     SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
                     SwipeToDismissBoxValue.StartToEnd -> Color.Blue
                     else -> MaterialTheme.colorScheme.surfaceVariant
@@ -412,11 +449,11 @@ private fun ScanItem(
             )
             
             val scale by animateFloatAsState(
-                targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.8f else 1.2f,
+                targetValue = if (effectiveTarget == SwipeToDismissBoxValue.Settled) 0.8f else 1.2f,
                 label = "swipe_scale_animation"
             )
 
-            val alignment = when (dismissState.targetValue) {
+            val alignment = when (effectiveTarget) {
                 SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
                 else -> Alignment.CenterEnd
             }
@@ -429,14 +466,14 @@ private fun ScanItem(
                     .padding(horizontal = 20.dp),
                 contentAlignment = alignment
             ) {
-                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                if (effectiveTarget == SwipeToDismissBoxValue.EndToStart) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = stringResource(R.string.btn_delete),
                         tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.scale(scale)
                     )
-                } else if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
+                } else if (effectiveTarget == SwipeToDismissBoxValue.StartToEnd) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = stringResource(R.string.btn_rename),
@@ -450,6 +487,7 @@ private fun ScanItem(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .offset(x = animatedHintOffset.dp)
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = onLongClick
