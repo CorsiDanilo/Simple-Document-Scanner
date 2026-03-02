@@ -43,6 +43,12 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -340,6 +346,18 @@ fun ScansScreen(
                                     renameText = document.title
                                     documentToRename = document
                                 },
+                                onShare = {
+                                    val uri = document.pdfUri ?: document.imageUri
+                                    val mimeType = if (document.format == DocumentFormat.PDF) "application/pdf" else "image/jpeg"
+                                    uri?.let {
+                                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                            type = mimeType
+                                            putExtra(Intent.EXTRA_STREAM, it)
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        }
+                                        context.startActivity(Intent.createChooser(shareIntent, null))
+                                    }
+                                },
                                 isSelectionMode = isSelectionMode
                             )
                         }
@@ -350,7 +368,7 @@ fun ScansScreen(
     }
 }
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ScanItem(
     document: ScannedDocument,
@@ -359,6 +377,7 @@ private fun ScanItem(
     onLongClick: () -> Unit,
     onDelete: () -> Unit,
     onRename: () -> Unit,
+    onShare: () -> Unit,
     isSelectionMode: Boolean = false
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()) }
@@ -366,18 +385,80 @@ private fun ScanItem(
         dateFormat.format(Date(document.timestamp))
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
-        )
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+            } else if (dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                onRename()
+            }
+            // Return false to snap back to the original position, waiting for confirmation
+            false
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = !isSelectionMode,
+        enableDismissFromEndToStart = !isSelectionMode,
+        backgroundContent = {
+            val color by animateColorAsState(
+                targetValue = when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.errorContainer
+                    SwipeToDismissBoxValue.StartToEnd -> Color.Blue
+                    else -> MaterialTheme.colorScheme.surfaceVariant
+                },
+                label = "swipe_color_animation"
+            )
+            
+            val scale by animateFloatAsState(
+                targetValue = if (dismissState.targetValue == SwipeToDismissBoxValue.Settled) 0.8f else 1.2f,
+                label = "swipe_scale_animation"
+            )
+
+            val alignment = when (dismissState.targetValue) {
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                else -> Alignment.CenterEnd
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
+            ) {
+                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.btn_delete),
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.scale(scale)
+                    )
+                } else if (dismissState.targetValue == SwipeToDismissBoxValue.StartToEnd) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.btn_rename),
+                        tint = Color.White,
+                        modifier = Modifier.scale(scale)
+                    )
+                }
+            }
+        }
     ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
+            )
+        ) {
         ListItem(
             headlineContent = {
                 Text(
@@ -429,18 +510,11 @@ private fun ScanItem(
             trailingContent = if (!isSelectionMode) {
                 {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onRename) {
+                        IconButton(onClick = onShare) {
                             Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(R.string.btn_rename),
+                                imageVector = Icons.Default.Share,
+                                contentDescription = stringResource(R.string.btn_share),
                                 tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        IconButton(onClick = onDelete) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.btn_delete),
-                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -448,5 +522,6 @@ private fun ScanItem(
             } else null,
             colors = ListItemDefaults.colors(containerColor = Color.Transparent)
         )
+    }
     }
 }

@@ -124,14 +124,16 @@ fun ResultScreen(
      * Copies a content:// URI (e.g. from ML Kit) to our cache dir,
      * then shares it via our FileProvider so that other apps can read it.
      */
-    fun shareFile(sourceUri: Uri, mimeType: String) {
+    fun shareFile(sourceUri: Uri, mimeType: String, docName: String, allImageUris: List<Uri> = emptyList()) {
         scope.launch {
             try {
                 val extension = if (mimeType.contains("pdf")) ".pdf" else ".jpg"
                 val shareDir = File(context.cacheDir, "share_temp")
                 if (!shareDir.exists()) shareDir.mkdirs()
 
-                val tempFile = File(shareDir, "share_${System.currentTimeMillis()}$extension")
+                // Sanitize file name for file system
+                val safeName = docName.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+                val tempFile = File(shareDir, "$safeName$extension")
 
                 // Copy content to our own cache file
                 withContext(Dispatchers.IO) {
@@ -155,6 +157,14 @@ fun ResultScreen(
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 context.startActivity(Intent.createChooser(shareIntent, null))
+                
+                // Save the file anyway so it's not lost
+                if (mimeType == "application/pdf") {
+                    viewModel.saveDocument(sourceUri, docName)
+                } else {
+                    val urisToSave = if (allImageUris.isNotEmpty()) allImageUris else listOf(sourceUri)
+                    viewModel.saveImage(urisToSave, docName)
+                }
             } catch (e: Exception) {
                 snackbarHostState.showSnackbar("Share failed: ${e.localizedMessage}")
             }
@@ -185,7 +195,17 @@ fun ResultScreen(
         AlertDialog(
             onDismissRequest = { showShareDialog = false },
             title = { Text(stringResource(R.string.share_choose_format_title)) },
-            text = { Text(stringResource(R.string.share_choose_format_message)) },
+            text = {
+                Column {
+                    Text(stringResource(R.string.share_choose_format_message))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Note: The shared document will also be saved in 'My Scans' automatically.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
             confirmButton = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -194,7 +214,8 @@ fun ResultScreen(
                         TextButton(
                             onClick = {
                                 showShareDialog = false
-                                shareFile(pdfUri, "application/pdf")
+                                val name = documentName.ifBlank { defaultName }
+                                shareFile(pdfUri, "application/pdf", name)
                             }
                         ) {
                             Icon(Icons.Default.PictureAsPdf, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -206,9 +227,10 @@ fun ResultScreen(
                         TextButton(
                             onClick = {
                                 showShareDialog = false
+                                val name = documentName.ifBlank { defaultName }
                                 // For now share the first image if multiple, 
                                 // or we could share all as multiple files but keep it simple
-                                shareFile(imageUris.first(), "image/jpeg")
+                                shareFile(imageUris.first(), "image/jpeg", name, imageUris)
                             }
                         ) {
                             Icon(Icons.Default.Image, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -302,10 +324,16 @@ fun ResultScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Background Preview
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            // Foreground Preview
             LazyRow(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -315,17 +343,14 @@ fun ResultScreen(
                         contentDescription = null,
                         modifier = Modifier
                             .fillParentMaxSize()
-                            .padding(32.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .graphicsLayer {
-                                alpha = 0.3f
-                            },
+                            .padding(16.dp)
+                            .clip(RoundedCornerShape(16.dp)),
                         contentScale = ContentScale.Fit
                     )
                 }
                 if (imageUris.isEmpty()) {
                     item {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Box(modifier = Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.SaveAlt,
                                 contentDescription = null,
@@ -339,14 +364,10 @@ fun ResultScreen(
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.weight(1f))
-
-                Spacer(modifier = Modifier.weight(1f))
 
             // Document name input
             OutlinedTextField(
@@ -385,12 +406,13 @@ fun ResultScreen(
 
                     FilledTonalButton(
                         onClick = {
+                            val name = documentName.ifBlank { defaultName }
                             if (pdfUri != null && imageUris.isNotEmpty()) {
                                 showShareDialog = true
                             } else if (pdfUri != null) {
-                                shareFile(pdfUri, "application/pdf")
+                                shareFile(pdfUri, "application/pdf", name)
                             } else if (imageUris.isNotEmpty()) {
-                                shareFile(imageUris.first(), "image/jpeg")
+                                shareFile(imageUris.first(), "image/jpeg", name, imageUris)
                             }
                         },
                         modifier = Modifier.weight(1f),
