@@ -56,15 +56,15 @@ graph TD
     UI --> VM
     VM --> UC
     UC --> RepoInt
-    RepoInt <|-- RepoImpl
+    RepoImpl -. implements .-> RepoInt
     RepoImpl --> FM
     FM --> Storage
 ```
 
 ## Quick Links
 
-*   **[Getting Started](docs/getting-started.md)**: Setup instructions and build requirements.
-*   **[Architecture Guide](docs/architecture.md)**: Detailed breakdown of the MVVM and Clean Architecture implementation.
-*   **[API Reference](docs/api-reference.md)**: Documentation for `IDocumentRepository` and core use cases.
+*   **[Getting Started](./03-setup.md)**: Setup instructions and build requirements.
+*   **[Architecture Guide](./02-structure.md)**: Detailed breakdown of the MVVM and Clean Architecture implementation.
+*   **[API Reference](./07-domain-layer-logic.md)**: Documentation for `IDocumentRepository` and core use cases.
 
 [🏠 Index](./README.md) | [Next ➡](./02-structure.md)
