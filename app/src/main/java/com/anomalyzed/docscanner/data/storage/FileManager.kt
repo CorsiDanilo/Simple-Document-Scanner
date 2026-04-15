@@ -38,6 +38,7 @@ class FileManager @Inject constructor(
         } else {
             generateFileName("PDF")
         }
+        ensureDirectoryExists(documentsDir)
         val destinationFile = File(documentsDir, fileName)
 
         context.contentResolver.openInputStream(sourceUri)?.use { input ->
@@ -61,6 +62,7 @@ class FileManager @Inject constructor(
         } else {
             generateFileName("IMG", ".jpg")
         }
+        ensureDirectoryExists(picturesDir)
         val destinationFile = File(picturesDir, fileName)
 
         context.contentResolver.openInputStream(sourceUri)?.use { input ->
@@ -158,5 +160,18 @@ class FileManager @Inject constructor(
     private fun generateFileName(prefix: String, extension: String = ".pdf"): String {
         val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         return "${prefix}_${timeStamp}${extension}"
+    }
+
+    private fun ensureDirectoryExists(directory: File) {
+        if (directory.exists()) {
+            if (!directory.isDirectory) {
+                throw IllegalStateException("Storage path is not a directory: ${directory.absolutePath}")
+            }
+            return
+        }
+
+        if (!directory.mkdirs()) {
+            throw IllegalStateException("Unable to create storage directory: ${directory.absolutePath}")
+        }
     }
 }

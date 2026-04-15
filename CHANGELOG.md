@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-04-15
+
+### Fixed
+- **Save Reliability (PDF/Image)**:
+  - Fixed `ENOENT (No such file or directory)` errors when saving scans in some environments.
+  - The app now ensures target storage directories are created before writing PDF or image files.
+  - Added clearer failure handling when the storage path is invalid or cannot be created.
+
 ## [1.0.1] - 2026-03-02
 
 ### Added
