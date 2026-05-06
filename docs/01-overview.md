@@ -14,6 +14,7 @@ The application operates within the document management domain, focusing on the 
 *   **Multi-Format Support:** Supports saving scans as PDF documents or individual JPEG images.
 *   **Local Storage Management:** Utilizes a dedicated `FileManager` to handle file I/O operations, ensuring secure storage within the app's private directory.
 *   **Document Sharing:** Implements `FileProvider` to generate secure, shareable URIs for external applications.
+*   **In-App Auto Updates:** Checks for and installs updates directly from GitHub releases automatically or manually.
 *   **Modern UI/UX:** Built with Jetpack Compose and Material 3, featuring dynamic color support and a responsive design.
 *   **Asynchronous Processing:** Uses Kotlin Coroutines and `Flow` to ensure a non-blocking, responsive user experience during heavy I/O operations.
 
@@ -37,7 +38,7 @@ The project follows a Clean Architecture pattern, separating concerns into disti
 ```mermaid
 graph TD
     subgraph Presentation
-        UI[Screens: HomeScreen, ScannerScreen, ResultScreen, ScansScreen]
+        UI[Screens: HomeScreen, ScannerScreen, ResultScreen, ScansScreen, SettingsScreen]
         VM[ViewModels: ScannerViewModel, ScansViewModel]
     end
 

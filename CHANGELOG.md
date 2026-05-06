@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-05-06
+
+### Added
+- **Settings Screen**: Aggiunta una nuova schermata per le Impostazioni accessibile dalla Home, dal design pulito in stile Material 3.
+- **In-App Updater Enhancements**: 
+  - Il controllo automatico degli aggiornamenti è ora eseguito in background ogni volta che l'app torna in primo piano.
+  - Aggiunti pulsanti nella schermata delle Impostazioni per forzare il controllo manuale degli aggiornamenti e per visualizzare la cronologia completa dei rilasci (questo changelog) direttamente all'interno dell'app.
+
 ## [1.0.3] - 2026-04-16
 
 ### Added

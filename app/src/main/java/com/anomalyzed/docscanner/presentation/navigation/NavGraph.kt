@@ -14,6 +14,7 @@ import com.anomalyzed.docscanner.presentation.scans.ScansScreen
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Scans : Screen("scans")
+    object Settings : Screen("settings")
     object Result : Screen("result/{pdfUri}/{imageUris}") {
         fun createRoute(pdfUri: String, imageUris: List<String>): String {
             val encodedPdf = Uri.encode(pdfUri.ifEmpty { "none" })
@@ -25,7 +26,11 @@ sealed class Screen(val route: String) {
 }
 
 @Composable
-fun DocScannerNavGraph(navController: NavHostController) {
+fun DocScannerNavGraph(
+    navController: NavHostController,
+    onCheckForUpdates: () -> Unit,
+    onViewChangelog: () -> Unit
+) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
             HomeScreen(
@@ -34,6 +39,9 @@ fun DocScannerNavGraph(navController: NavHostController) {
                 },
                 onNavigateToScans = {
                     navController.navigate(Screen.Scans.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }
@@ -43,6 +51,16 @@ fun DocScannerNavGraph(navController: NavHostController) {
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            com.anomalyzed.docscanner.presentation.settings.SettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onCheckForUpdates = onCheckForUpdates,
+                onViewChangelog = onViewChangelog
             )
         }
 

@@ -20,6 +20,7 @@ class AppUpdater {
 
     companion object {
         private const val GITHUB_API_URL = "https://api.github.com/repos/CorsiDanilo/simple-document-scanner/releases/latest"
+        private const val GITHUB_CHANGELOG_URL = "https://raw.githubusercontent.com/CorsiDanilo/simple-document-scanner/main/CHANGELOG.md"
         private const val TAG = "AppUpdater"
     }
 
@@ -72,6 +73,25 @@ class AppUpdater {
         }
         
         return@withContext UpdateInfo(false, "", "", null)
+    }
+
+    suspend fun fetchFullChangelog(): String? = withContext(Dispatchers.IO) {
+        try {
+            val url = URL(GITHUB_CHANGELOG_URL)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 5000
+            connection.readTimeout = 5000
+
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                return@withContext BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
+            } else {
+                Log.e(TAG, "Failed to fetch full changelog. HTTP code: ${connection.responseCode}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching full changelog: ${e.message}")
+        }
+        return@withContext null
     }
 
     private fun isNewerVersion(latest: String, current: String): Boolean {
