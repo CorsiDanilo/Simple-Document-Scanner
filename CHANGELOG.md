@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-06-04
+
+### Fixed
+- Hardened the updater with trusted release asset checks, SHA-256 verification, and signer validation.
+- Marked the download receiver non-exported and tied completion handling to the expected download metadata.
+
 ## [1.0.4] - 2026-05-06
 
 ### Added

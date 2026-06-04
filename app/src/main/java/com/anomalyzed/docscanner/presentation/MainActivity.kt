@@ -36,8 +36,9 @@ import androidx.navigation.compose.rememberNavController
 import com.anomalyzed.docscanner.presentation.navigation.DocScannerNavGraph
 import com.anomalyzed.docscanner.presentation.theme.SimpleDocumentScannerTheme
 import com.anomalyzed.docscanner.presentation.updater.UpdateDialog
+import com.anomalyzed.docscanner.updater.ApkUpdateVerifier
 import com.anomalyzed.docscanner.updater.AppUpdater
-import com.anomalyzed.docscanner.updater.DownloadReceiver
+import com.anomalyzed.docscanner.updater.PendingUpdateStore
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -160,8 +161,12 @@ class MainActivity : ComponentActivity() {
                                 updateInfo = null
                             },
                             onConfirm = {
-                                info.downloadUrl?.let { url ->
-                                    downloadUpdate(url, info.versionName)
+                                val downloadUrl = info.downloadUrl
+                                val apkSha256 = info.apkSha256
+                                if (downloadUrl != null && apkSha256 != null) {
+                                    downloadUpdate(downloadUrl, info.versionName, apkSha256)
+                                } else {
+                                    Toast.makeText(context, "Update verification metadata missing", Toast.LENGTH_SHORT).show()
                                 }
                                 updateInfo = null
                             }
@@ -193,20 +198,50 @@ class MainActivity : ComponentActivity() {
         }
     }
     
-    private fun downloadUpdate(url: String, versionName: String) {
+    private fun downloadUpdate(url: String, versionName: String, expectedSha256: String) {
         try {
+            val normalizedSha256 = ApkUpdateVerifier.normalizeSha256(expectedSha256)
+            if (normalizedSha256 == null || !ApkUpdateVerifier.isTrustedDownloadUrl(url)) {
+                Toast.makeText(this, "Update verification failed", Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val fileName = updateApkFileName(versionName)
             val request = DownloadManager.Request(Uri.parse(url))
                 .setTitle("Aggiornamento Simple Document Scanner")
                 .setDescription("Scaricando la versione $versionName")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, "document-scanner-$versionName.apk")
+                .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
+                .setMimeType("application/vnd.android.package-archive")
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
                 
             val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            DownloadReceiver.enqueuedDownloadId = downloadManager.enqueue(request)
+            val downloadId = downloadManager.enqueue(request)
+            val saved = PendingUpdateStore.save(
+                context = this,
+                downloadId = downloadId,
+                expectedSha256 = normalizedSha256,
+                fileName = fileName
+            )
+
+            if (!saved) {
+                downloadManager.remove(downloadId)
+                Toast.makeText(this, "Update verification failed", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun updateApkFileName(versionName: String): String {
+        val safeVersion = versionName.map { char ->
+            when (char) {
+                in 'A'..'Z', in 'a'..'z', in '0'..'9', '.', '-', '_' -> char
+                else -> '_'
+            }
+        }.joinToString("").ifBlank { "update" }
+
+        return "document-scanner-$safeVersion.apk"
     }
 }

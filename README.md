@@ -12,6 +12,7 @@ A high-performance, modern Android application built to simplify document scanni
 
 - **Intelligent Scanning**: Automatic document detection, perspective correction, and image enhancement using ML Kit.
 - **In-App Auto Updates**: Stays automatically up-to-date by securely fetching the latest releases directly from GitHub. Check manually and view the full Changelog from the dedicated Settings screen.
+- **Verified Updates**: Release APKs are verified before installation using the published SHA-256 metadata and the installed app signing certificate.
 - **Versatile Formats**: Export your documents as high-quality **PDFs** or **JPEG/PNG** images.
 - **Material You Design**: A beautiful, dynamic interface that adapts to your device theme, built entirely with **Jetpack Compose**.
 - **Effortless Sharing**: Integration with the native Android Share Sheet for quick delivery via email, cloud, or messaging.
@@ -71,6 +72,12 @@ graph TD
 2. Open the project in Android Studio.
 3. Sync the project with Gradle files.
 4. Build and run it on your device.
+
+---
+
+## 🔖 Release Process
+
+Releases are versioned in `app/build.gradle.kts` and documented in `CHANGELOG.md`. Pushing a tag such as `v1.0.5` triggers the GitHub Actions release pipeline.
 
 ---
 

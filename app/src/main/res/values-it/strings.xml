@@ -14,6 +14,7 @@
 
     <!-- Result Screen -->
     <string name="result_title">Anteprima</string>
+    <string name="result_loading">Caricamento anteprima...</string>
     <string name="result_document_captured">Documento acquisito in alta risoluzione</string>
     <string name="result_document_name_label">Nome Documento</string>
     <string name="result_document_name_hint">Inserisci un nome per questa scansione</string>
