@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base theme for the app to avoid generic unstyled components before Compose loads -->
-    <style name="Theme.SimpleDocumentScanner" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.SimpleDocumentScanner" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>

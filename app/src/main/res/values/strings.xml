@@ -67,4 +67,41 @@
     <!-- Save Dialog -->
     <string name="save_choose_format_title">Save as…</string>
     <string name="save_choose_format_message">Choose the format to save:</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_updates">Updates</string>
+    <string name="settings_btn_check_updates">Check for updates</string>
+    <string name="settings_btn_view_changelog">View changelog</string>
+    <string name="settings_section_language">Language</string>
+    <string name="settings_language_summary">Choose your preferred language</string>
+    <string name="settings_language_system">System Default</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_italian">Italiano</string>
+
+    <!-- Update flow -->
+    <string name="update_toast_checking">Checking for updates…</string>
+    <string name="update_toast_up_to_date">App is already up to date</string>
+    <string name="update_toast_failed">Failed to check for updates</string>
+    <string name="update_toast_loading_changelog">Loading changelog…</string>
+    <string name="update_toast_changelog_failed">Failed to load changelog.</string>
+    <string name="update_toast_load_error">Error loading</string>
+    <string name="update_toast_metadata_missing">Update verification metadata missing</string>
+    <string name="update_toast_verification_failed">Update verification failed</string>
+    <string name="update_btn_close">Close</string>
+    <string name="update_dm_title">Simple Document Scanner Update</string>
+    <string name="update_dm_desc">Downloading version %1$s</string>
+
+    <!-- Update Dialog -->
+    <string name="update_dialog_title">New Update %1$s</string>
+    <string name="update_dialog_message">A new version of the application is available. Do you want to download and install it now?</string>
+    <string name="update_dialog_changelog">Changelog:</string>
+    <string name="update_dialog_btn_update">Update</string>
+    <string name="update_dialog_btn_later">Later</string>
+
+    <!-- Result / Share note & action strings -->
+    <string name="result_share_save_note">Note: The shared document will also be saved in \'My Scans\' automatically.</string>
+    <string name="btn_save_multiple_images">Save %1$d Images</string>
+    <string name="error_share">Share failed: %1$s</string>
+    <string name="error_scanner">Scanner error: %1$s</string>
 </resources>

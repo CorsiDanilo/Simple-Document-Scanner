@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.anomalyzed.docscanner.R
 import com.anomalyzed.docscanner.updater.UpdateInfo
 
 @Composable
@@ -25,21 +27,20 @@ fun UpdateDialog(
 
     AlertDialog(
         onDismissRequest = {
-            // Dismissable as requested
             onDismiss()
         },
         title = {
-            Text(text = "Nuovo aggiornamento ${updateInfo.versionName}")
+            Text(text = stringResource(R.string.update_dialog_title, updateInfo.versionName))
         },
         text = {
             Column {
                 Text(
-                    text = "È disponibile una nuova versione dell'applicazione. Vuoi scaricarla e installarla ora?",
+                    text = stringResource(R.string.update_dialog_message),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Changelog:",
+                    text = stringResource(R.string.update_dialog_changelog),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -57,7 +58,7 @@ fun UpdateDialog(
                     onConfirm()
                 }
             ) {
-                Text("Aggiorna")
+                Text(stringResource(R.string.update_dialog_btn_update))
             }
         },
         dismissButton = {
@@ -66,7 +67,7 @@ fun UpdateDialog(
                     onDismiss()
                 }
             ) {
-                Text("Più tardi")
+                Text(stringResource(R.string.update_dialog_btn_later))
             }
         }
     )

@@ -120,7 +120,7 @@ fun HomeScreen(
             }
             .addOnFailureListener { e ->
                 scope.launch {
-                    snackbarHostState.showSnackbar("Scanner error: ${e.localizedMessage}")
+                    snackbarHostState.showSnackbar(context.getString(R.string.error_scanner, e.localizedMessage ?: ""))
                 }
             }
     }

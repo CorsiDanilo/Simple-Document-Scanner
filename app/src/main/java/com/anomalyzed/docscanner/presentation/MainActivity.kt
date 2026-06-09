@@ -5,7 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,12 +39,13 @@ import com.anomalyzed.docscanner.presentation.updater.UpdateDialog
 import com.anomalyzed.docscanner.updater.ApkUpdateVerifier
 import com.anomalyzed.docscanner.updater.AppUpdater
 import com.anomalyzed.docscanner.updater.PendingUpdateStore
+import com.anomalyzed.docscanner.R
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -118,7 +119,7 @@ class MainActivity : ComponentActivity() {
                         onCheckForUpdates = {
                             scope.launch {
                                 try {
-                                    Toast.makeText(context, "Checking for updates...", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.update_toast_checking), Toast.LENGTH_SHORT).show()
                                     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                                     val currentVersion = packageInfo.versionName ?: "1.0.0"
                                     
@@ -127,10 +128,10 @@ class MainActivity : ComponentActivity() {
                                     if (info.updateAvailable) {
                                         updateInfo = info
                                     } else {
-                                        Toast.makeText(context, "App is already up to date", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.update_toast_up_to_date), Toast.LENGTH_SHORT).show()
                                     }
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Failed to check for updates", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.update_toast_failed), Toast.LENGTH_SHORT).show()
                                     e.printStackTrace()
                                 }
                             }
@@ -138,16 +139,16 @@ class MainActivity : ComponentActivity() {
                         onViewChangelog = {
                             scope.launch {
                                 try {
-                                    Toast.makeText(context, "Caricamento changelog...", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.update_toast_loading_changelog), Toast.LENGTH_SHORT).show()
                                     val updater = AppUpdater()
                                     val fullChangelog = updater.fetchFullChangelog()
                                     if (!fullChangelog.isNullOrBlank()) {
                                         fullChangelogText = fullChangelog
                                     } else {
-                                        Toast.makeText(context, "Impossibile caricare il changelog.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.update_toast_changelog_failed), Toast.LENGTH_SHORT).show()
                                     }
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Errore nel caricamento", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.update_toast_load_error), Toast.LENGTH_SHORT).show()
                                     e.printStackTrace()
                                 }
                             }
@@ -166,7 +167,7 @@ class MainActivity : ComponentActivity() {
                                 if (downloadUrl != null && apkSha256 != null) {
                                     downloadUpdate(downloadUrl, info.versionName, apkSha256)
                                 } else {
-                                    Toast.makeText(context, "Update verification metadata missing", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.update_toast_metadata_missing), Toast.LENGTH_SHORT).show()
                                 }
                                 updateInfo = null
                             }
@@ -188,7 +189,7 @@ class MainActivity : ComponentActivity() {
                             },
                             confirmButton = {
                                 TextButton(onClick = { fullChangelogText = null }) {
-                                    Text("Chiudi")
+                                    Text(context.getString(R.string.update_btn_close))
                                 }
                             }
                         )
@@ -202,14 +203,14 @@ class MainActivity : ComponentActivity() {
         try {
             val normalizedSha256 = ApkUpdateVerifier.normalizeSha256(expectedSha256)
             if (normalizedSha256 == null || !ApkUpdateVerifier.isTrustedDownloadUrl(url)) {
-                Toast.makeText(this, "Update verification failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.update_toast_verification_failed), Toast.LENGTH_SHORT).show()
                 return
             }
 
             val fileName = updateApkFileName(versionName)
             val request = DownloadManager.Request(Uri.parse(url))
-                .setTitle("Aggiornamento Simple Document Scanner")
-                .setDescription("Scaricando la versione $versionName")
+                .setTitle(getString(R.string.update_dm_title))
+                .setDescription(getString(R.string.update_dm_desc, versionName))
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setDestinationInExternalFilesDir(this, Environment.DIRECTORY_DOWNLOADS, fileName)
                 .setMimeType("application/vnd.android.package-archive")
@@ -227,7 +228,7 @@ class MainActivity : ComponentActivity() {
 
             if (!saved) {
                 downloadManager.remove(downloadId)
-                Toast.makeText(this, "Update verification failed", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.update_toast_verification_failed), Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
             e.printStackTrace()

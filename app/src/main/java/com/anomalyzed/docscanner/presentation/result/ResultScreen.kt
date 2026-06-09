@@ -166,7 +166,7 @@ fun ResultScreen(
                     viewModel.saveImage(urisToSave, docName)
                 }
             } catch (e: Exception) {
-                snackbarHostState.showSnackbar("Share failed: ${e.localizedMessage}")
+                snackbarHostState.showSnackbar(context.getString(R.string.error_share, e.localizedMessage ?: ""))
             }
         }
     }
@@ -200,7 +200,7 @@ fun ResultScreen(
                     Text(stringResource(R.string.share_choose_format_message))
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Note: The shared document will also be saved in 'My Scans' automatically.",
+                        text = stringResource(R.string.result_share_save_note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -284,7 +284,7 @@ fun ResultScreen(
                         ) {
                             Icon(Icons.Default.Image, contentDescription = null)
                             Spacer(modifier = Modifier.size(8.dp))
-                            Text(if (imageUris.size > 1) "Save ${imageUris.size} Images" else stringResource(R.string.btn_save_jpeg))
+                            Text(if (imageUris.size > 1) stringResource(R.string.btn_save_multiple_images, imageUris.size) else stringResource(R.string.btn_save_jpeg))
                         }
                     }
                     if (pdfUri != null && imageUris.isNotEmpty()) {

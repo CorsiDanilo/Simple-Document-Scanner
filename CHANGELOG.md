@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-06-09
+
+### Added
+- **Multi-language Support (Italian / English)**: Added a dynamic language selector in the Settings screen, allowing users to choose between English, Italian, or the system default language dynamically without having to change the system-wide device language.
+- **Side-by-Side Debug testing**: Configured the `debug` build type with `applicationIdSuffix = ".debug"` and `versionNameSuffix = "-debug"` to allow running both release and debug builds simultaneously on the same device.
+
+### Fixed
+- Changed the main activity's parent class to `AppCompatActivity` and updated the base theme to extend `Theme.AppCompat` to ensure proper backward-compatible per-app language management without runtime theme exceptions.
+- Fully localized all update-related, scanner error, and sharing Toast messages, Dialog labels, and DownloadManager notifications in both English and Italian.
+
 ## [1.0.5] - 2026-06-04
 
 ### Fixed
