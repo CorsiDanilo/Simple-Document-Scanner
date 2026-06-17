@@ -20,7 +20,7 @@ Ensure your development environment meets the following requirements before atte
 
 1.  **Clone the repository:**
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/danilo/simple-document-scanner.git
     cd simple-document-scanner
     ```
 
@@ -40,9 +40,9 @@ The project does not require external API keys or sensitive environment variable
 1.  Create a `local.properties` file in the project root directory if it does not exist.
 2.  Add your Android SDK path:
     ```properties
-    sdk.dir=/Users/<your-username>/Library/Android/sdk
+    sdk.dir=/Users/username/Library/Android/sdk
     ```
-    *(On Windows, use `C:\\Users\\<your-username>\\AppData\\Local\\Android\\Sdk`)*
+    *(On Windows, use `C:\\Users\\username\\AppData\\Local\\Android\\Sdk`)*
 
 ## 4. Architecture Overview
 
