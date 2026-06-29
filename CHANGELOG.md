@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-06-29
+
+### Added
+- **App Version Display**: Added the current app version to the Settings screen in a new "About" section.
+- **Flat UI Style**: Redesigned the Settings screen with standard Material 3 `ListItem` components, unifying the style with other projects.
+
 ## [1.1.0] - 2026-06-09
 
 ### Added

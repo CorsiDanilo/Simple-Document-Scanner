@@ -78,6 +78,8 @@
     <string name="settings_language_system">System Default</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_italian">Italiano</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version</string>
 
     <!-- Update flow -->
     <string name="update_toast_checking">Checking for updates…</string>
