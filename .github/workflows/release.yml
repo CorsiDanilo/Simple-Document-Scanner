@@ -32,6 +32,9 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease
 
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
@@ -44,7 +47,7 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: "35.0.0"
 
-      - name: Find and Rename Signed APK
+      - name: Find and Rename APKs
         run: |
           # Use the signed APK path from the previous step
           SIGNED_APK="${{ steps.sign_app.outputs.signedReleaseFile }}"
@@ -55,11 +58,20 @@ jobs:
           echo "Found Signed APK at $SIGNED_APK"
           cp "$SIGNED_APK" document-scanner-signed.apk
 
+          DEBUG_APK="app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$DEBUG_APK" ]; then
+            echo "Error: Debug APK not found at $DEBUG_APK"
+            exit 1
+          fi
+          cp "$DEBUG_APK" document-scanner-debug.apk
+
       - name: Upload Release Artifact
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: document-scanner-signed.apk
+          files: |
+            document-scanner-signed.apk
+            document-scanner-debug.apk
           generate_release_notes: true
           body_path: CHANGELOG.md
         env:
