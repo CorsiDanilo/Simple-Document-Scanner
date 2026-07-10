@@ -8,6 +8,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import com.anomalyzed.docscanner.BuildConfig
 
 data class UpdateInfo(
     val updateAvailable: Boolean,
@@ -115,7 +116,7 @@ internal data class VerifiedApkAsset(
     val sha256: String
 )
 
-internal fun findVerifiedApkAsset(assets: org.json.JSONArray?): VerifiedApkAsset? {
+internal fun findVerifiedApkAsset(assets: org.json.JSONArray?, isDebug: Boolean = BuildConfig.DEBUG): VerifiedApkAsset? {
     if (assets == null || assets.length() == 0) return null
 
     for (i in 0 until assets.length()) {
@@ -125,8 +126,15 @@ internal fun findVerifiedApkAsset(assets: org.json.JSONArray?): VerifiedApkAsset
         val digest = if (asset.has("digest")) asset.optString("digest") else null
         val sha256 = ApkUpdateVerifier.normalizeSha256(digest)
 
+        val nameMatchesBuildType = if (isDebug) {
+            name.contains("debug", ignoreCase = true)
+        } else {
+            !name.contains("debug", ignoreCase = true)
+        }
+
         if (
             name.endsWith(".apk", ignoreCase = true) &&
+            nameMatchesBuildType &&
             downloadUrl.isNotBlank() &&
             sha256 != null &&
             ApkUpdateVerifier.isTrustedDownloadUrl(downloadUrl)

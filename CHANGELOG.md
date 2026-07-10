@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-07-10
+
+### Fixed
+- Fixed the in-app updater downloading the debug build variant instead of matching the user's installed build variant (debug or signed/release).
+
 ## [1.2.0] - 2026-06-29
 
 ### Added
